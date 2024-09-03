@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+enum Intention {
+  DATING
+  COMMUNICATION
+  LOVE
+}
+
+enum RegistrationStage {
+  START
+  PHOTO
+  DONE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+model User {
+  id                String            @id @default(uuid())
+  telegramId        BigInt            @unique
+  firstName         String?
+  photoKeys         String[]          @default([])
+  city              String?
+  gender            Gender?
+  intention         Intention         @default(COMMUNICATION)
+  birthDate         DateTime?
+  isOnline          Boolean           @default(false)
+  lastSeen          DateTime?
+  registrationStage RegistrationStage @default(START)
+  isVerified        Boolean           @default(false)
+  aboutMe           String?
+  reactions         Reaction[]        @relation("UserReactions")
+  reactedTo         Reaction[]        @relation("TargetUserReactions")
+  deletedAt         DateTime?
+  createdAt         DateTime          @default(now())
+  messages          Message[]
+  chats             Chat[]            @relation("Chats")
+  isBot             Boolean           @default(false)
+}
+
+enum ReactionType {
+  LIKE
+  DISLIKE
+}
+
+model Reaction {
+  id         String       @id @default(uuid())
+  type       ReactionType
+  user       User         @relation("UserReactions", fields: [userId], references: [id])
+  userId     String
+  targetUser User         @relation("TargetUserReactions", fields: [targetId], references: [id])
+  targetId   String
+  createdAt  DateTime     @default(now())
+}
+
+model Chat {
+  id        String    @id @default(uuid())
+  users     User[]    @relation("Chats")
+  messages  Message[]
+  createdAt DateTime  @default(now())
+}
+
+model Message {
+  id        String    @id @default(uuid())
+  text      String
+  chat      Chat      @relation(fields: [chatId], references: [id])
+  chatId    String
+  user      User      @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime  @default(now())
+  editedAt  DateTime?
+  deletedAt DateTime?
+  readAt    DateTime?
+}
