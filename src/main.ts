@@ -13,7 +13,8 @@ async function main() {
   const app = await NestFactory.create(AppModule)
   app.setGlobalPrefix('api')
   app.enableCors({
-    origin: ['http://localhost:3000', 'https://siftdating-frontend.vercel.app'],
+    // origin: ['http://localhost:3000', 'https://siftdating-frontend.vercel.app'],
+    origin: '*',
     credentials: true
   })
   app.useGlobalPipes(new ValidationPipe({ transform: true }))

@@ -35,7 +35,13 @@ export class EditMessageDTO {
 export class DeleteMessageDTO {
   @IsString()
   @IsUUID()
-  id: string
+  chatId: string
+
+  @IsArray()
+  // @IsString({ each: true })
+  @ArrayMinSize(1)
+  @IsUUID('4', { each: true })
+  messagesIds: string[]
 }
 
 export class ReadMessageDTO {
@@ -44,7 +50,8 @@ export class ReadMessageDTO {
   chatId: string
 
   @IsArray()
-  @IsString({ each: true })
+  // @IsString({ each: true })
   @ArrayMinSize(1)
+  @IsUUID('4', { each: true })
   messagesIds: string[]
 }

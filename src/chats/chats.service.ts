@@ -23,6 +23,9 @@ export class ChatsService {
       },
       include: {
         messages: {
+          where: {
+            deletedAt: null
+          },
           orderBy: {
             createdAt: 'desc'
           },
@@ -47,8 +50,16 @@ export class ChatsService {
     const promise = chats.map(async (chat) => {
       const lastMessage = chat.messages[0] ?? null
       const user = chat.users[0]
+      const unRead = await this.prisma.message.count({
+        where: {
+          chatId: chat.id,
+          userId: user.id,
+          deletedAt: null,
+          readAt: null
+        }
+      })
 
-      const photo = await this.userService.getPhotoUrls(Number(user.telegramId))
+      // const photo = await this.userService.getPhotoUrls(Number(user.telegramId))
 
       delete chat.messages
       delete chat.users
@@ -58,13 +69,21 @@ export class ChatsService {
         ...chat,
         user: {
           ...user,
-          photo: photo[0]
+          // photo: photo[0]
+          photo: 'https://api.dicebear.com/9.x/avataaars/svg?seed'
         },
-        lastMessage
+        lastMessage,
+        unRead
       }
     })
 
-    return await Promise.all(promise)
+    const result = await Promise.all(promise)
+
+    return result.sort(
+      (a, b) =>
+        (b.lastMessage?.createdAt.getTime() || 0) -
+        (a.lastMessage?.createdAt.getTime() || 0)
+    )
   }
 
   async getLikes(telegramId: number): Promise<any[]> {

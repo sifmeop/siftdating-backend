@@ -32,6 +32,7 @@ model User {
   photoKeys         String[]          @default([])
   city              String?
   gender            Gender?
+  genderPreference  Gender?
   intention         Intention         @default(COMMUNICATION)
   birthDate         DateTime?
   isOnline          Boolean           @default(false)

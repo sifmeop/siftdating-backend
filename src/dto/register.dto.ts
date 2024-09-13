@@ -31,6 +31,10 @@ export class RegisterStartDto {
   @IsString()
   @IsEnum(Gender, { message: 'Invalid gender' })
   gender: Gender
+
+  @IsString()
+  @IsEnum(Gender, { message: 'Invalid gender' })
+  genderPreference: Gender
 }
 
 function IsDateFormat(validationOptions?: ValidationOptions) {

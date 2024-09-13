@@ -3,6 +3,7 @@ import { User } from '@prisma/client'
 import { AwsService } from 'src/aws/aws.service'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { RedisService } from 'src/redis/redis.service'
+import { getFileUrl } from '~/common/utils'
 
 @Injectable()
 export class UserService {
@@ -36,11 +37,9 @@ export class UserService {
       return JSON.parse(cache as string) as string[]
     }
 
-    const photoUrls = await Promise.all(
-      user.photoKeys.map(async (key) => {
-        return await this.aws.getFileUrl(`${String(508440400)}/${key}`)
-      })
-    )
+    const photoUrls = user.photoKeys.map((key) => {
+      return getFileUrl(`${String(508440400)}/${key}`)
+    })
 
     await this.redisService.call('set', key, JSON.stringify(photoUrls))
 

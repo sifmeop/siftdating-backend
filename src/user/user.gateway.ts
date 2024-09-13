@@ -1,9 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import {
-  SubscribeMessage,
-  WebSocketGateway,
-  WebSocketServer
-} from '@nestjs/websockets'
+import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets'
 import { Server, Socket } from 'socket.io'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { NODE_ENV, USER_ID } from '~/common/env'
@@ -24,14 +20,11 @@ export class UserGateway {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  @SubscribeMessage('message')
-  handleOffer(client: Socket, payload: any): void {
-    this.server.emit('notification', payload)
-  }
-
   async handleConnection(client: Socket) {
     if (NODE_ENV === 'development') {
-      this.clients.set(USER_ID, client)
+      const userId = USER_ID
+      this.clients.set(userId, client)
+      client.emit('connected', userId)
       return
     }
 
@@ -69,7 +62,7 @@ export class UserGateway {
   async sendToClient(clientId: string, event: string, payload: any) {
     const client = this.clients.get(clientId)
 
-    if (client) {
+    if (client && client.connected) {
       client.emit(event, payload)
     }
   }

@@ -1,7 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import { Message } from '@prisma/client'
 import { PrismaService } from 'src/prisma/prisma.service'
-import { PusherService } from 'src/pusher/pusher.service'
 import { UserGateway } from 'src/user/user.gateway'
 import { UserService } from 'src/user/user.service'
 import { v4 as uuidv4 } from 'uuid'
@@ -17,7 +16,6 @@ export class MessagesService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly userService: UserService,
-    private readonly pusherService: PusherService,
     private readonly userGateway: UserGateway
   ) {}
 
@@ -53,7 +51,7 @@ export class MessagesService {
     const createdAt = new Date()
     const id = uuidv4()
 
-    this.pusherService.sendMessage(body.chatId, {
+    const newMessage = {
       chatId: body.chatId,
       createdAt: createdAt.toISOString(),
       deletedAt: null,
@@ -62,7 +60,9 @@ export class MessagesService {
       readAt: null,
       text: body.text,
       userId
-    })
+    }
+
+    // this.pusherService.sendMessage(body.chatId, newMessage)
 
     const chat = await this.prismaService.chat.findUnique({
       where: {
@@ -72,6 +72,9 @@ export class MessagesService {
             id: userId
           }
         }
+      },
+      select: {
+        users: true
       }
     })
 
@@ -79,14 +82,16 @@ export class MessagesService {
       throw new HttpException('Chat not found', HttpStatus.NOT_FOUND)
     }
 
+    const userIds = chat.users.map((user) => user.id)
+
+    await Promise.all(
+      userIds.map(async (id) => {
+        await this.userGateway.sendToClient(id, 'new-message', newMessage)
+      })
+    )
+
     return await this.prismaService.message.create({
-      data: {
-        id,
-        chatId: chat.id,
-        userId,
-        text: body.text,
-        createdAt
-      }
+      data: newMessage
     })
   }
 
@@ -113,20 +118,44 @@ export class MessagesService {
   }
 
   async deleteMessage(userId: string, body: DeleteMessageDTO) {
-    const message = await this.prismaService.message.findFirst({
+    const chat = await this.prismaService.chat.findUnique({
       where: {
-        id: body.id,
-        userId
+        id: body.chatId,
+        messages: {
+          some: {
+            id: {
+              in: body.messagesIds
+            }
+          }
+        },
+        users: {
+          some: {
+            id: userId
+          }
+        }
+      },
+      select: {
+        id: true,
+        users: {
+          select: {
+            id: true
+          }
+        }
       }
     })
 
-    if (!message) {
-      throw new HttpException('Message not found', HttpStatus.NOT_FOUND)
-    }
+    const recipientId = chat.users.find((user) => user.id !== userId).id
 
-    await this.prismaService.message.update({
+    await this.userGateway.sendToClient(recipientId, 'deleted-messages', {
+      chatId: chat.id,
+      messageIds: body.messagesIds
+    })
+
+    await this.prismaService.message.updateMany({
       where: {
-        id: message.id
+        id: {
+          in: body.messagesIds
+        }
       },
       data: {
         deletedAt: new Date()
@@ -138,6 +167,13 @@ export class MessagesService {
     const chat = await this.prismaService.chat.findUnique({
       where: {
         id: body.chatId
+      },
+      select: {
+        users: {
+          select: {
+            id: true
+          }
+        }
       }
     })
 
@@ -175,10 +211,16 @@ export class MessagesService {
       }
     })
 
-    await this.userGateway.sendToClient(message[0].userId, 'read-messages', {
-      chatId: body.chatId,
-      messagesIds: body.messagesIds,
-      readAt: readAt.toISOString()
-    })
+    const userIds = chat.users.map((user) => user.id)
+
+    await Promise.all(
+      userIds.map(async (userId) => {
+        await this.userGateway.sendToClient(userId, 'read-messages', {
+          chatId: body.chatId,
+          messagesIds: body.messagesIds,
+          readAt: readAt.toISOString()
+        })
+      })
+    )
   }
 }

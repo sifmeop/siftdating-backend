@@ -10,7 +10,6 @@ import { TelegramAuthGuard } from './common/guard'
 import { DiscoverModule } from './discover/discover.module'
 import { MessagesModule } from './messages/messages.module'
 import { PrismaModule } from './prisma/prisma.module'
-import { PusherModule } from './pusher/pusher.module'
 import { RedisModule } from './redis/redis.module'
 import { RegisterModule } from './register/register.module'
 import { UserModule } from './user/user.module'
@@ -26,7 +25,6 @@ import { UserModule } from './user/user.module'
     RegisterModule,
     AwsModule,
     ChatsModule,
-    PusherModule,
     MessagesModule,
     UserModule,
     RedisModule

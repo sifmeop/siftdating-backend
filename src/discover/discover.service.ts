@@ -24,6 +24,7 @@ export class DiscoverService {
       },
       select: {
         id: true,
+        genderPreference: true,
         reactedTo: {
           select: {
             targetId: true
@@ -44,6 +45,7 @@ export class DiscoverService {
         id: {
           notIn: previousIds
         },
+        genderPreference: user.genderPreference,
         registrationStage: RegistrationStage.DONE
       },
       take: 20

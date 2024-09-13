@@ -3,7 +3,7 @@ import {
   Controller,
   Delete,
   Get,
-  HttpStatus,
+  HttpCode,
   Post,
   Put,
   Query
@@ -39,29 +39,29 @@ export class MessagesController {
   }
 
   @Put('/')
+  @HttpCode(204)
   async editMessage(
     @GetCurrentUserId() userId: string,
     @Body() body: EditMessageDTO
   ) {
     await this.messagesService.editMessage(userId, body)
-    return { status: HttpStatus.OK }
   }
 
   @Put('/read')
+  @HttpCode(204)
   async readMessage(
     @GetCurrentUserId() userId: string,
     @Body() body: ReadMessageDTO
   ) {
     await this.messagesService.readMessage(userId, body)
-    return { status: HttpStatus.OK }
   }
 
   @Delete('/')
+  @HttpCode(204)
   async deleteMessage(
     @GetCurrentUserId() userId: string,
     @Body() body: DeleteMessageDTO
   ) {
     await this.messagesService.deleteMessage(userId, body)
-    return 'Success deleted'
   }
 }
