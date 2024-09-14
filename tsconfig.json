@@ -11,10 +11,10 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
-      "~/dto/*": ["./src/dto/*"],
-      "~/common/*": ["./src/common/*"],
-      "~/config/*": ["./src/config/*"],
-      "~/*": [".src/*"]
+      "~/dto/*": ["src/dto/*"],
+      "~/common/*": ["src/common/*"],
+      "~/config/*": ["src/config/*"],
+      "~/*": ["src/*"]
     },
     "incremental": true,
     "skipLibCheck": true,
